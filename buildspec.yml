@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  
+  install:
+    runtime-versions:
+      python: 3.8
+    commands:
+      - CFSTACK_BUCKET=bima-test
+      - CFSTACK_NAME=example-aws-lambda-devlops
+      - env
+
+  build:
+    commands:
+
+      ### Install Python Requirements #############################################################
+      - pip install -U -r ./functions/test-python/requirements.txt -t ./functions/test-python
+
+      ### Deploy CloudFormation ###################################################################
+      # Package
+      - aws cloudformation package --template-file cfstack-main.yaml --s3-bucket ${CFSTACK_BUCKET} --s3-prefix builds --output-template-file cfstack-main_pkgd.yaml
+      # Deploy
+      - aws cloudformation deploy --template-file cfstack-main_pkgd.yaml --s3-bucket ${CFSTACK_BUCKET} --s3-prefix builds --stack-name ${CFSTACK_NAME} --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --no-fail-on-empty-changeset
